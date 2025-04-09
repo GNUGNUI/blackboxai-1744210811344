@@ -29,25 +29,35 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const audioFile = document.getElementById('audioFile').files[0];
+        const audioUrl = document.getElementById('audioUrl').value;
         let audioData = null;
 
         if (audioFile) {
             try {
                 audioData = await readAudioFile(audioFile);
+                const song = storage.addSong(formData, audioData);
+                if (song) {
+                    uploadForm.reset();
+                    renderManageSongs();
+                    showNotification('Song uploaded successfully!');
+                }
             } catch (error) {
-                alert('Error processing audio file. Please try again.');
-                return;
+                showNotification('Error processing audio file', 'error');
             }
-        }
-
-        const song = storage.addSong(formData, audioData);
-        
-        if (song) {
-            uploadForm.reset();
-            renderManageSongs();
-            showNotification('Song uploaded successfully!');
+        } else if (audioUrl) {
+            const song = storage.addSong(formData, null, audioUrl);
+            if (song) {
+                uploadForm.reset();
+                renderManageSongs();
+                showNotification('Song uploaded successfully!');
+            }
         } else {
-            showNotification('Error uploading song', 'error');
+            const song = storage.addSong(formData);
+            if (song) {
+                uploadForm.reset();
+                renderManageSongs();
+                showNotification('Song uploaded successfully!');
+            }
         }
     });
 
@@ -57,18 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const songId = document.getElementById('editSongId').value;
         const audioFile = document.getElementById('editAudioFile').files[0];
+        const audioUrl = document.getElementById('editAudioUrl').value;
         
-        // Handle audio file if provided
-        if (audioFile) {
-            try {
-                const audioData = await readAudioFile(audioFile);
-                storage.updateAudioData(songId, audioData);
-            } catch (error) {
-                showNotification('Error processing audio file', 'error');
-                return;
-            }
-        }
-
         const updatedSong = {
             name: document.getElementById('editSongName').value,
             composer: document.getElementById('editComposer').value,
@@ -77,11 +77,20 @@ document.addEventListener('DOMContentLoaded', () => {
             demoText: document.getElementById('editDemoText').value || 'Demo song'
         };
 
-        if (storage.updateSong(songId, updatedSong)) {
+        try {
+            if (audioFile) {
+                const audioData = await readAudioFile(audioFile);
+                storage.updateSong(songId, updatedSong, audioData);
+            } else if (audioUrl) {
+                storage.updateSong(songId, updatedSong, null, audioUrl);
+            } else {
+                storage.updateSong(songId, updatedSong);
+            }
+            
             closeEditModal.click();
             renderManageSongs();
             showNotification('Song updated successfully!');
-        } else {
+        } catch (error) {
             showNotification('Error updating song', 'error');
         }
     });
@@ -120,6 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const songElement = document.createElement('div');
             songElement.className = 'bg-white rounded-lg shadow p-4 flex items-center justify-between';
             
+            const audioData = storage.getAudioData(song.id);
+            const audioStatus = audioData ? 
+                audioData.type === 'youtube' ? 'YouTube video linked' :
+                audioData.type === 'url' ? 'Audio URL linked' :
+                'Audio file attached' : 'No audio';
+            
             songElement.innerHTML = `
                 <div class="flex-1">
                     <h3 class="font-semibold">${song.name}</h3>
@@ -130,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </div>
                     <p class="text-xs text-gray-500 mt-1">Demo Text: ${song.demoText || 'Demo song'}</p>
+                    <p class="text-xs text-gray-500">${audioStatus}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button class="edit-btn p-2 text-blue-600 hover:bg-blue-50 rounded-full" data-id="${song.id}">
@@ -173,9 +189,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show current audio status
         const currentAudioStatus = document.getElementById('currentAudioStatus');
-        const hasAudio = storage.getAudioData(song.id) !== null;
-        currentAudioStatus.textContent = hasAudio ? 'Current song has audio' : 'No audio file attached';
-        currentAudioStatus.className = `text-sm ${hasAudio ? 'text-teal-600' : 'text-gray-500'} mt-1`;
+        const audioData = storage.getAudioData(song.id);
+        
+        if (audioData) {
+            if (audioData.type === 'youtube') {
+                currentAudioStatus.textContent = 'Current audio: YouTube video';
+                document.getElementById('editAudioUrl').value = audioData.data;
+            } else if (audioData.type === 'url') {
+                currentAudioStatus.textContent = 'Current audio: Audio URL';
+                document.getElementById('editAudioUrl').value = audioData.data;
+            } else {
+                currentAudioStatus.textContent = 'Current audio: Audio file';
+                document.getElementById('editAudioUrl').value = '';
+            }
+            currentAudioStatus.className = 'text-sm text-teal-600 mt-1';
+        } else {
+            currentAudioStatus.textContent = 'No audio attached';
+            currentAudioStatus.className = 'text-sm text-gray-500 mt-1';
+            document.getElementById('editAudioUrl').value = '';
+        }
 
         editModal.classList.remove('hidden');
         editModal.classList.add('flex');
