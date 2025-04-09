@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (audioData.type === 'youtube') {
                 const videoId = storage.getYouTubeVideoId(audioData.data);
                 audioContent = `
-                    <div class="aspect-video bg-white rounded">
+                    <div class="aspect-video">
                         <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" 
                             frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
                             gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -220,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else if (audioData.type === 'url' || audioData.type === 'file') {
                 audioContent = `
-                    <div class="flex items-center bg-white rounded px-3 py-2">
-                        <audio controls class="w-full h-8">
+                    <div class="flex items-center">
+                        <audio controls class="w-full h-7">
                             <source src="${audioData.data}" type="audio/mpeg">
                             Your browser does not support the audio element.
                         </audio>
@@ -231,35 +231,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         modal.innerHTML = `
-            <div class="modal-content bg-white w-full sm:w-11/12 max-w-2xl h-[100vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto">
-                <div class="sticky top-0 bg-white z-10">
-                    <div class="flex justify-between items-center py-2 px-3 border-b">
+            <div class="modal-content bg-white w-full h-[100vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white z-10 border-b">
+                    <div class="flex justify-between items-center p-2">
                         <div class="min-w-0">
-                            <h2 class="text-base font-bold theme-text truncate">${song.name}</h2>
+                            <h2 class="text-sm font-bold theme-text truncate">${song.name}</h2>
                             <p class="text-xs theme-text opacity-60 truncate">${song.composer}</p>
                         </div>
-                        <button class="p-1.5" id="closeSongModal">
+                        <button class="p-1" id="closeSongModal">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div class="px-3 py-3 border-b bg-gray-50">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-medium theme-text">Audio Player</span>
-                            <i class="fas fa-${audioData ? (audioData.type === 'youtube' ? 'youtube' : 'music') : 'volume-mute'} text-sm theme-text opacity-60"></i>
+                    ${audioData ? `
+                        <div class="p-2 bg-gray-50">
+                            ${audioContent}
                         </div>
-                        ${audioData ? audioContent : `
-                            <div class="text-center py-3 bg-white rounded">
-                                <p class="text-xs theme-text opacity-60">No audio available for this song</p>
-                            </div>
-                        `}
-                    </div>
+                    ` : `
+                        <div class="p-2 bg-gray-50 text-center">
+                            <p class="text-xs theme-text opacity-60">No audio available</p>
+                        </div>
+                    `}
                 </div>
-                <div class="px-3 py-2">
-                    <pre class="whitespace-pre-wrap font-sans text-xs leading-5 theme-text" style="word-break: break-word;">${song.lyrics}</pre>
-                    <div class="flex flex-wrap gap-1 mt-3 pt-2 border-t">
-                        ${song.tags.map(tag => `
-                            <span class="px-1.5 py-0.5 bg-gray-50 rounded text-xs theme-text">${tag}</span>
-                        `).join('')}
+                <div class="p-2">
+                    <pre class="whitespace-pre-wrap font-sans text-xs leading-5 theme-text mb-2">${song.lyrics}</pre>
+                    <div class="flex flex-wrap gap-1 text-xs theme-text opacity-60">
+                        ${song.tags.map(tag => `#${tag}`).join(' ')}
                     </div>
                 </div>
             </div>
