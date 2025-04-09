@@ -44,7 +44,7 @@ class StorageManager {
     }
 
     // Add new song
-    addSong(song, audioData = null) {
+    addSong(song, audioData = null, audioUrl = null) {
         song.id = Date.now().toString();
         song.tags = typeof song.tags === 'string' ? 
             song.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : 
@@ -52,7 +52,12 @@ class StorageManager {
         song.demoText = song.demoText || 'Demo song';
         
         if (audioData) {
-            this.audioData[song.id] = audioData;
+            this.audioData[song.id] = { type: 'file', data: audioData };
+        } else if (audioUrl) {
+            this.audioData[song.id] = { 
+                type: this.isYouTubeUrl(audioUrl) ? 'youtube' : 'url',
+                data: audioUrl 
+            };
         }
         
         this.songs.push(song);
@@ -75,7 +80,7 @@ class StorageManager {
     }
 
     // Update song
-    updateSong(id, updatedSong) {
+    updateSong(id, updatedSong, audioData = null, audioUrl = null) {
         const index = this.songs.findIndex(song => song.id === id);
         if (index !== -1) {
             // Keep existing song data that shouldn't be overwritten
@@ -85,6 +90,16 @@ class StorageManager {
             const tags = typeof updatedSong.tags === 'string' ? 
                 updatedSong.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : 
                 updatedSong.tags;
+
+            // Update audio data if provided
+            if (audioData) {
+                this.audioData[id] = { type: 'file', data: audioData };
+            } else if (audioUrl) {
+                this.audioData[id] = { 
+                    type: this.isYouTubeUrl(audioUrl) ? 'youtube' : 'url',
+                    data: audioUrl 
+                };
+            }
 
             // Update the song with new data while preserving the ID
             this.songs[index] = {
@@ -167,9 +182,28 @@ class StorageManager {
     }
 
     // Update audio data
-    updateAudioData(songId, audioData) {
-        this.audioData[songId] = audioData;
+    updateAudioData(songId, audioData = null, audioUrl = null) {
+        if (audioData) {
+            this.audioData[songId] = { type: 'file', data: audioData };
+        } else if (audioUrl) {
+            this.audioData[songId] = { 
+                type: this.isYouTubeUrl(audioUrl) ? 'youtube' : 'url',
+                data: audioUrl 
+            };
+        }
         this.saveSongs();
+    }
+
+    // Helper function to check if URL is a YouTube URL
+    isYouTubeUrl(url) {
+        return url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/);
+    }
+
+    // Helper function to extract YouTube video ID
+    getYouTubeVideoId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
     }
 }
 
