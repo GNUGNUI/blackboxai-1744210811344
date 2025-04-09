@@ -193,7 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'song-card bg-white/95 backdrop-blur-sm rounded-xl p-4 cursor-pointer transform hover:-translate-y-1 transition-all duration-300 flex flex-col shadow-lg hover:shadow-xl' :
                 'song-card bg-white/95 backdrop-blur-sm rounded-xl p-4 cursor-pointer transition-all duration-300 flex gap-4 items-center shadow-lg hover:shadow-xl';
 
-            const hasAudio = storage.getAudioData(song.id) !== null;
+            const audioData = storage.getAudioData(song.id);
+            const hasAudio = audioData !== null;
             
             songElement.innerHTML = `
                 <div class="${isGridView ? '' : 'flex-1'}">
@@ -205,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </div>
                     <div class="flex items-center gap-2 text-sm theme-text opacity-60">
-                        ${hasAudio ? '<i class="fas fa-music" data-accent></i>' : ''}
+                        ${hasAudio ? `<i class="fas fa-${audioData.type === 'youtube' ? 'youtube' : 'music'}" data-accent></i>` : ''}
                     </div>
                 </div>
             `;
@@ -220,6 +221,45 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50';
         
         const audioData = storage.getAudioData(song.id);
+        let audioContent = '';
+
+        if (audioData) {
+            if (audioData.type === 'youtube') {
+                const videoId = storage.getYouTubeVideoId(audioData.data);
+                audioContent = `
+                    <div class="bg-white/50 rounded-lg p-4 shadow-inner">
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" 
+                            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+                            gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                `;
+            } else if (audioData.type === 'url') {
+                audioContent = `
+                    <div class="bg-white/50 rounded-lg p-4 shadow-inner">
+                        <audio controls class="w-full">
+                            <source src="${audioData.data}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                `;
+            } else {
+                audioContent = `
+                    <div class="bg-white/50 rounded-lg p-4 shadow-inner">
+                        <audio controls class="w-full">
+                            <source src="${audioData.data}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                `;
+            }
+        } else {
+            audioContent = `
+                <div class="text-center py-6 bg-white/50 rounded-lg shadow-inner">
+                    <i class="fas fa-volume-mute text-3xl mb-3 theme-text opacity-60"></i>
+                    <p class="text-sm theme-text opacity-60">No audio available for this song</p>
+                </div>
+            `;
+        }
         
         modal.innerHTML = `
             <div class="modal-content bg-white/95 backdrop-blur-xl rounded-2xl p-8 w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] transform hover:-translate-y-1">
@@ -239,22 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="text-sm theme-text opacity-60 mb-2">${song.demoText || 'Demo song'}</p>
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-sm font-medium theme-text opacity-60 uppercase tracking-wider">Audio Player</h3>
-                                <i class="fas fa-music text-xl" data-accent></i>
+                                <i class="fas fa-${audioData?.type === 'youtube' ? 'youtube' : 'music'} text-xl" data-accent></i>
                             </div>
                         </div>
-                        ${audioData ? `
-                            <div class="bg-white/50 rounded-lg p-4 shadow-inner">
-                                <audio controls class="w-full">
-                                    <source src="${audioData}" type="audio/mpeg">
-                                    Your browser does not support the audio element.
-                                </audio>
-                            </div>
-                        ` : `
-                            <div class="text-center py-6 bg-white/50 rounded-lg shadow-inner">
-                                <i class="fas fa-volume-mute text-3xl mb-3 theme-text opacity-60"></i>
-                                <p class="text-sm theme-text opacity-60">No audio available for this song</p>
-                            </div>
-                        `}
+                        ${audioContent}
                     </div>
                     <div class="bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl rounded-xl p-6 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
                         <h3 class="text-sm font-medium theme-text opacity-60 uppercase tracking-wider mb-4">Lyrics</h3>
