@@ -205,9 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </div>
                     <div class="flex items-center gap-2 text-sm theme-text opacity-60">
-                        <i class="far fa-calendar"></i>
-                        <span>${new Date(song.date).toLocaleDateString()}</span>
-                        ${hasAudio ? '<i class="fas fa-music ml-2" data-accent></i>' : ''}
+                        ${hasAudio ? '<i class="fas fa-music" data-accent></i>' : ''}
                     </div>
                 </div>
             `;
@@ -269,10 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <span class="px-4 py-2 rounded-full text-sm theme-text bg-white/70 backdrop-blur-xl shadow-sm transform transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">${tag}</span>
                             `).join('')}
                         </div>
-                    </div>
-                    <div class="flex items-center justify-end gap-2 theme-text opacity-60 text-sm">
-                        <i class="far fa-calendar-alt"></i>
-                        <span>Added on ${new Date(song.date).toLocaleDateString()}</span>
                     </div>
                 </div>
             </div>
